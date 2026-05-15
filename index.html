@@ -461,21 +461,215 @@
     }
 
     @media (max-width: 640px) {
-      .page { padding: 10px; }
-      .header { flex-direction: column; gap: 6px; }
-      .title h1 { font-size: 24px; }
-      .card { padding: 15px; border-radius: 12px; }
-      .params-grid { grid-template-columns: 1fr 1fr; }
-      .services { grid-template-columns: 1fr; }
-      .service-price { grid-template-columns: 72px 1fr; }
-      .prints-head { display: none; }
+      body {
+        background: #f5f7fb;
+      }
+
+      .page {
+        padding: 10px;
+        max-width: 100%;
+      }
+
+      .header {
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .title h1 {
+        font-size: 22px;
+      }
+
+      .brand {
+        font-size: 13px;
+        margin-top: 4px;
+      }
+
+      .version {
+        padding-top: 0;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .top-actions {
+        justify-content: flex-start;
+        gap: 6px;
+        margin-top: 8px;
+      }
+
+      .top-actions .btn,
+      .top-actions label {
+        height: 34px !important;
+        font-size: 12px !important;
+        padding: 0 9px !important;
+      }
+
+      .save-status {
+        text-align: left;
+        font-size: 11px;
+        margin-top: 5px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .left,
+      .right {
+        gap: 12px;
+      }
+
+      .card {
+        padding: 14px;
+        border-radius: 16px;
+        box-shadow: 0 1px 6px rgba(16, 24, 40, .05);
+      }
+
+      .card h2 {
+        font-size: 18px;
+        margin-bottom: 14px;
+      }
+
+      .params-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      label {
+        font-size: 12px;
+      }
+
+      input,
+      select {
+        height: 38px;
+        font-size: 16px;
+        border-radius: 10px;
+      }
+
+      .services {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .service-row {
+        min-height: 42px;
+        gap: 10px;
+      }
+
+      .service-price {
+        grid-template-columns: 70px 1fr;
+        margin-left: 65px;
+      }
+
+      .hint {
+        font-size: 12px;
+      }
+
+      .switch {
+        width: 52px;
+        height: 28px;
+      }
+
+      .slider::before {
+        width: 22px;
+        height: 22px;
+      }
+
+      .switch input:checked + .slider::before {
+        transform: translateX(24px);
+      }
+
+      .prints-head {
+        display: none;
+      }
+
       .print-row {
         grid-template-columns: 1fr 1fr;
         gap: 8px;
-        padding: 10px 0;
+        padding: 12px;
+        margin-bottom: 10px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fafcff;
       }
-      .print-row .btn { height: 34px; }
-      .print-row .delete { width: 100%; }
+
+      .print-row input:nth-child(3) {
+        grid-column: span 2;
+      }
+
+      .print-row .btn {
+        height: 36px;
+        font-size: 13px;
+        border-radius: 10px;
+      }
+
+      .print-row .delete {
+        width: 100%;
+      }
+
+      .btn.add {
+        width: 100%;
+        height: 42px;
+        border-radius: 12px;
+        margin-top: 10px;
+      }
+
+      .tabs {
+        overflow-x: auto;
+        padding-bottom: 2px;
+        margin-bottom: 12px;
+        gap: 8px;
+      }
+
+      .tab-btn {
+        white-space: nowrap;
+        padding: 9px 13px;
+        border-radius: 999px;
+        font-size: 13px;
+      }
+
+      .summary p {
+        font-size: 15px;
+        margin-bottom: 11px;
+      }
+
+      .calc-note {
+        font-size: 11px;
+      }
+
+      .preview-top {
+        justify-content: flex-start;
+        margin-bottom: 10px;
+      }
+
+      .width-badge {
+        font-size: 13px;
+        padding: 7px 10px;
+      }
+
+      .canvas-scroll {
+        max-height: 280px;
+        border-radius: 12px;
+      }
+
+      canvas {
+        max-width: none;
+      }
+
+      .cost-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .price-table {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .saved-item-actions .btn {
+        flex: 1;
+      }
     }
   </style>
 </head>

@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Калькулятор ДТФ 4.6 PWA</title>
+  <meta name="theme-color" content="#2454e6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="ARI-PRINT" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <style>
+    :root {
+      --bg: #f1f4f9;
+      --card: #ffffff;
+      --blue: #2454e6;
+      --blue-dark: #1d43b8;
+      --blue-soft: #e8efff;
+      --text: #101828;
+      --muted: #667085;
+      --border: #d0d5dd;
+      --line: #eaecf0;
+      --danger: #e85b61;
+      --success: #12b76a;
+      --gray-toggle: #c3c8d2;
+      --print-fill: #dbe6ff;
+      --print-stroke: #70a0ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .page {
+      padding: 14px;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .title h1 {
+      margin: 0;
+      color: var(--blue);
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .brand {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .version {
+      padding-top: 12px;
+      font-size: 18px;
+      white-space: nowrap;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
+
+    .btn.secondary {
+      background: #eef2ff;
+      color: var(--blue);
+      border: 1px solid #c7d2fe;
+    }
+
+    .btn.secondary:hover {
+      background: #dfe7ff;
+    }
+
+    .btn.success {
+      background: var(--success);
+    }
+
+    .btn.success:hover {
+      background: #0e9f5d;
+    }
+
+    .save-status {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .left, .right {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 1px 0 rgba(16, 24, 40, .02);
+    }
+
+    .card h2 {
+      margin: 0 0 18px;
+      color: var(--blue);
+      font-size: 20px;
+    }
+
+    .params-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 16px 14px;
+      align-items: end;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    input, select {
+      width: 100%;
+      height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 5px 9px;
+      font-size: 15px;
+      background: #fff;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(36, 84, 230, .12);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .services {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: minmax(230px, 1fr) 190px;
+      gap: 12px 18px;
+      align-items: center;
+    }
+
+    .service-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-height: 46px;
+    }
+
+    .service-price {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 8px;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    .switch {
+      position: relative;
+      width: 55px;
+      height: 30px;
+      flex: 0 0 auto;
+    }
+
+    .switch input { display: none; }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      border-radius: 99px;
+      background: var(--gray-toggle);
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      left: 3px;
+      top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: .2s;
+      box-shadow: 0 1px 2px rgba(0,0,0,.16);
+    }
+
+    .switch input:checked + .slider { background: var(--blue); }
+    .switch input:checked + .slider::before { transform: translateX(25px); }
+
+    .prints-head, .print-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto auto auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .prints-head {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+      padding-right: 4px;
+    }
+
+    .print-row {
+      padding: 7px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 8px;
+      height: 35px;
+      padding: 0 13px;
+      color: #fff;
+      background: var(--blue);
+      font-size: 15px;
+      cursor: pointer;
+      transition: .15s;
+      white-space: nowrap;
+    }
+
+    .btn:hover { background: var(--blue-dark); }
+    .btn.auto { background: #68b3d4; }
+    .btn.rotate { background: #2762cf; }
+    .btn.delete { background: var(--danger); width: 34px; padding: 0; }
+    .btn.add { margin-top: 14px; }
+
+    .summary p {
+      margin: 0 0 12px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .summary p:last-child { margin-bottom: 0; }
+
+    .summary span { font-weight: 700; }
+
+    .economy-line {
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+      color: #344054;
+    }
+
+    .calc-note {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.25;
+    }
+
+    .preview-wrap {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview-top {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 14px;
+    }
+
+    .width-badge {
+      background: var(--blue-soft);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-weight: 700;
+      color: #344054;
+    }
+
+    .canvas-scroll {
+      width: 100%;
+      max-height: 360px;
+      overflow: auto;
+      border: 2px dashed #bcc4d2;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    canvas {
+      display: block;
+      background: #fff;
+    }
+
+    .small-note {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .empty-prints {
+      display: none;
+      padding: 16px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .price-table {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .price-table strong { color: var(--text); }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .tab-btn.active {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .cost-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(180px, 1fr));
+      gap: 14px;
+    }
+
+    .cost-section {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      background: #fafcff;
+    }
+
+    .cost-section h3 {
+      margin: 0 0 12px;
+      color: var(--blue);
+      font-size: 16px;
+    }
+
+    .cost-fields {
+      display: grid;
+      gap: 10px;
+    }
+
+    .profit-box {
+      margin-top: 16px;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+    }
+
+    .profit-box p {
+      margin: 0 0 10px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .saved-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .saved-item {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fafcff;
+      display: grid;
+      gap: 8px;
+    }
+
+    .saved-item-title {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .saved-item-meta {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .saved-item-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .empty-saved {
+      padding: 16px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .params-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+      .version { font-size: 15px; }
+    }
+
+    @media (max-width: 640px) {
+      .page { padding: 10px; }
+      .header { flex-direction: column; gap: 6px; }
+      .title h1 { font-size: 24px; }
+      .card { padding: 15px; border-radius: 12px; }
+      .params-grid { grid-template-columns: 1fr 1fr; }
+      .services { grid-template-columns: 1fr; }
+      .service-price { grid-template-columns: 72px 1fr; }
+      .prints-head { display: none; }
+      .print-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 10px 0;
+      }
+      .print-row .btn { height: 34px; }
+      .print-row .delete { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <div class="title">
+        <h1>Калькулятор ДТФ 4.6</h1>
+        <div class="brand">ARI-PRINT.RU</div>
+      </div>
+      <div>
+        <div class="version">Версия: 4.6 PWA</div>
+        <div class="top-actions">
+          <button class="btn secondary" id="newCalcBtn">Новый расчет</button>
+          <button class="btn secondary" id="installAppBtn" style="display:none;">Установить</button>
+          <button class="btn success" id="saveCalcBtn">Сохранить расчет</button>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#667085;background:#fff;border:1px solid #d0d5dd;border-radius:8px;padding:0 10px;height:35px;">
+            <input type="checkbox" id="includeCostsPdf">
+            Себестоимость
+          </label>
+          <button class="btn secondary" id="exportPdfBtn">PDF</button>
+        </div>
+        <div class="save-status" id="saveStatus">Автосохранение включено</div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="left">
+        <div class="card">
+          <h2>Параметры и услуги</h2>
+
+          <div class="params-grid">
+            <div>
+              <label for="printType">Тип печати</label>
+              <select id="printType">
+                <option value="DTF">DTF</option>
+                <option value="UF_DTF">UF DTF</option>
+              </select>
+            </div>
+            <div>
+              <label for="meterPrice">Цена за метр</label>
+              <input id="meterPrice" type="number" min="0" step="1" />
+            </div>
+            <div>
+              <label for="gapX">Отступ X, см</label>
+              <input id="gapX" type="number" min="0" step="0.1" value="0.3" />
+            </div>
+            <div>
+              <label for="gapY">Отступ Y, см</label>
+              <input id="gapY" type="number" min="0" step="0.1" value="0.3" />
+            </div>
+            
+          </div>
+
+          <div class="services">
+            <div>
+              <div class="service-row">
+                <label class="switch">
+                  <input id="applyEnabled" type="checkbox" checked />
+                  <span class="slider"></span>
+                </label>
+                <div>
+                  <div>Нанесение</div>
+                  <div class="hint">Автоцена по тиражу, можно изменить вручную</div>
+                </div>
+              </div>
+            </div>
+            <div class="service-price">
+              <span>Цена/шт</span>
+              <input id="applyPrice" type="number" min="0" step="1" value="40" />
+            </div>
+
+            <div class="service-row">
+              <label class="switch">
+                <input id="cutEnabled" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+              <div>Нарезка принтов</div>
+            </div>
+            <div class="service-price">
+              <span>Цена/м</span>
+              <input id="cutPrice" type="number" min="0" step="1" value="400" />
+            </div>
+
+            <div class="service-row">
+              <label class="switch">
+                <input id="contourEnabled" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+              <div>Контурная резка</div>
+            </div>
+            <div class="service-price">
+              <span>Цена/м</span>
+              <input id="contourPrice" type="number" min="0" step="1" value="400" />
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Принты</h2>
+          <div class="prints-head">
+            <div>Ширина, см</div>
+            <div>Высота, см</div>
+            <div>Кол-во</div>
+            <div></div><div></div><div></div>
+          </div>
+          <div id="printsList"></div>
+          <div id="emptyPrints" class="empty-prints">Принты пока не добавлены. Нажмите «+ Добавить принт».</div>
+          <button class="btn add" id="addPrint">+ Добавить принт</button>
+          <div class="small-note">Количество изделий автоматически берется из количества принтов в первой строке. Остальные строки считаются дополнительными нанесениями.</div>
+        </div>
+      </section>
+
+      <section class="right">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="summaryTab">Расчет</button>
+          <button class="tab-btn" data-tab="costTab">Себестоимость</button>
+          <button class="tab-btn" data-tab="savedTab">Сохраненные</button>
+        </div>
+
+        <div id="summaryTab" class="tab-panel active">
+        <div class="card summary">
+          <h2>Итог</h2>
+          <p>Метраж: <span id="metersText">0 м</span> — <span id="printCostText">0 ₽</span><span class="calc-note" id="printCalcText"></span></p>
+          <p>Заполнение рулона: <span id="fillPercentText">0%</span><span class="calc-note" id="fillPercentCalcText"></span></p>
+          <p id="applyLine">Нанесение: <span id="applyCostText">0 ₽</span><span class="calc-note" id="applyCalcText"></span></p>
+          <p id="cutLine">Нарезка: <span id="cutCostText">0 ₽</span><span class="calc-note" id="cutCalcText"></span></p>
+          <p id="contourLine">Контурная резка: <span id="contourCostText">0 ₽</span><span class="calc-note" id="contourCalcText"></span></p>
+          <p>Цена за изделие: <span id="itemPriceText">0 ₽</span><span class="calc-note" id="itemCalcText"></span></p>
+          <p>Итого: <span id="totalText">0 ₽</span><span class="calc-note" id="totalCalcText"></span></p>
+          <p class="economy-line">Себестоимость: <span id="summaryCostPriceText">0 ₽</span><span class="calc-note" id="summaryCostCalcText"></span></p>
+          <p class="economy-line">Прибыль: <span id="summaryProfitText">0 ₽</span><span class="calc-note" id="summaryProfitCalcText"></span></p>
+          <p class="economy-line">Маржинальность: <span id="summaryMarginText">0%</span></p>
+        </div>
+
+        <div class="card preview-wrap">
+          <div class="preview-top">
+            <div class="width-badge" id="widthBadge">↔ Ширина печати: 58 см</div>
+          </div>
+          <div class="canvas-scroll" id="canvasScroll">
+            <canvas id="previewCanvas" width="580" height="260"></canvas>
+          </div>
+        </div>
+
+        </div>
+
+        <div id="costTab" class="tab-panel">
+          <div class="card">
+          <h2>Себестоимость</h2>
+
+          <div class="cost-grid">
+            <div class="cost-section">
+              <h3>Переменные расходы / метр</h3>
+              <div class="hint" style="margin-bottom:10px;">Значения автоматически переключаются отдельно для DTF и UF DTF</div>
+              <div class="cost-fields">
+                <div>
+                  <label for="filmCost">Пленка / A-film</label>
+                  <input id="filmCost" type="number" value="120" min="0" step="1">
+                </div>
+                <div>
+                  <label for="inkCost">Краска</label>
+                  <input id="inkCost" type="number" value="180" min="0" step="1">
+                </div>
+                <div>
+                  <label for="powderCost">Клей / порошок</label>
+                  <input id="powderCost" type="number" value="60" min="0" step="1">
+                </div>
+                <div>
+                  <label for="packageCost">Упаковка</label>
+                  <input id="packageCost" type="number" value="20" min="0" step="1">
+                </div>
+                <div>
+                  <label for="amortizationCost">Амортизация</label>
+                  <input id="amortizationCost" type="number" value="70" min="0" step="1">
+                </div>
+              </div>
+            </div>
+
+            <div class="cost-section">
+              <h3>Постоянные расходы / месяц</h3>
+              <div class="cost-fields">
+                <div>
+                  <label for="rentCost">Аренда</label>
+                  <input id="rentCost" type="number" value="180000" min="0" step="1000">
+                </div>
+                <div>
+                  <label for="salaryCost">Зарплаты</label>
+                  <input id="salaryCost" type="number" value="500000" min="0" step="1000">
+                </div>
+                <div>
+                  <label for="electricityCost">Электричество</label>
+                  <input id="electricityCost" type="number" value="70000" min="0" step="1000">
+                </div>
+                <div>
+                  <label for="otherCost">Прочее</label>
+                  <input id="otherCost" type="number" value="50000" min="0" step="1000">
+                </div>
+                <div>
+                  <label for="monthlyMeters">Производство метров/мес</label>
+                  <input id="monthlyMeters" type="number" value="2500" min="1" step="1">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="profit-box">
+            <p>Себестоимость заказа: <span id="costPriceText">0 ₽</span><span class="calc-note" id="costCalcText"></span></p>
+            <p>Прибыль: <span id="profitText">0 ₽</span><span class="calc-note" id="profitCalcText"></span></p>
+            <p>Маржинальность: <span id="marginText">0%</span></p>
+          </div>
+        </div>
+
+        </div>
+
+        <div id="savedTab" class="tab-panel">
+          <div class="card">
+            <h2>Сохраненные расчеты</h2>
+            <div id="savedList" class="saved-list"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Прайс</h2>
+          <div class="price-table">
+            <div><strong>DTF</strong><br>&lt;1 м — 1600 ₽<br>1–3 м — 1400 ₽<br>4–9 м — 1300 ₽<br>10–29 м — 1120 ₽<br>30–49 м — 900 ₽<br>50+ м — 850 ₽</div>
+            <div><strong>UF DTF</strong><br>&lt;1 м — 3000 ₽<br>1–3 м — 2000 ₽<br>4–9 м — 1800 ₽<br>10–29 м — 1600 ₽<br>30–49 м — 1400 ₽<br>50+ м — 1300 ₽</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const FULL_ROLL_WIDTH_CM = 58;
+    const CUT_ROLL_WIDTH_CM = 56;
+    const SCALE = 10;
+    const MAX_CANVAS_HEIGHT_PX = 30000;
+    const CURRENT_STATE_KEY = 'ariPrintDtfCalculatorCurrentStateV45';
+    const SAVED_CALCS_KEY = 'ariPrintDtfCalculatorSavedCalcsV45';
+
+    let isRestoring = false;
+    let meterPriceManual = false;
+    const costProfiles = {
+      DTF: {
+        filmCost: 120,
+        inkCost: 180,
+        powderCost: 60,
+        packageCost: 20,
+        amortizationCost: 70
+      },
+      UF_DTF: {
+        filmCost: 260,
+        inkCost: 350,
+        powderCost: 0,
+        packageCost: 35,
+        amortizationCost: 120
+      }
+    };
+
+    let lastCalculation = {
+      meters: 0,
+      total: 0,
+      itemPrice: 0,
+      orderCostPrice: 0,
+      profit: 0,
+      margin: 0
+    };
+
+    let prints = [];
+    let deferredInstallPrompt = null;
+
+    const els = {
+      printType: document.getElementById('printType'),
+      meterPrice: document.getElementById('meterPrice'),
+      gapX: document.getElementById('gapX'),
+      gapY: document.getElementById('gapY'),
+      applyEnabled: document.getElementById('applyEnabled'),
+      applyPrice: document.getElementById('applyPrice'),
+      cutEnabled: document.getElementById('cutEnabled'),
+      cutPrice: document.getElementById('cutPrice'),
+      contourEnabled: document.getElementById('contourEnabled'),
+      contourPrice: document.getElementById('contourPrice'),
+      printsList: document.getElementById('printsList'),
+      addPrint: document.getElementById('addPrint'),
+      emptyPrints: document.getElementById('emptyPrints'),
+      canvas: document.getElementById('previewCanvas'),
+      metersText: document.getElementById('metersText'),
+      printCostText: document.getElementById('printCostText'),
+      applyCostText: document.getElementById('applyCostText'),
+      cutCostText: document.getElementById('cutCostText'),
+      contourCostText: document.getElementById('contourCostText'),
+      itemPriceText: document.getElementById('itemPriceText'),
+      totalText: document.getElementById('totalText'),
+      summaryCostPriceText: document.getElementById('summaryCostPriceText'),
+      summaryCostCalcText: document.getElementById('summaryCostCalcText'),
+      summaryProfitText: document.getElementById('summaryProfitText'),
+      summaryProfitCalcText: document.getElementById('summaryProfitCalcText'),
+      summaryMarginText: document.getElementById('summaryMarginText'),
+      fillPercentText: document.getElementById('fillPercentText'),
+      fillPercentCalcText: document.getElementById('fillPercentCalcText'),
+      printCalcText: document.getElementById('printCalcText'),
+      applyCalcText: document.getElementById('applyCalcText'),
+      cutCalcText: document.getElementById('cutCalcText'),
+      contourCalcText: document.getElementById('contourCalcText'),
+      itemCalcText: document.getElementById('itemCalcText'),
+      totalCalcText: document.getElementById('totalCalcText'),
+      applyLine: document.getElementById('applyLine'),
+      cutLine: document.getElementById('cutLine'),
+      contourLine: document.getElementById('contourLine'),
+      widthBadge: document.getElementById('widthBadge'),
+      filmCost: document.getElementById('filmCost'),
+      inkCost: document.getElementById('inkCost'),
+      powderCost: document.getElementById('powderCost'),
+      packageCost: document.getElementById('packageCost'),
+      amortizationCost: document.getElementById('amortizationCost'),
+      rentCost: document.getElementById('rentCost'),
+      salaryCost: document.getElementById('salaryCost'),
+      electricityCost: document.getElementById('electricityCost'),
+      otherCost: document.getElementById('otherCost'),
+      monthlyMeters: document.getElementById('monthlyMeters'),
+      costPriceText: document.getElementById('costPriceText'),
+      costCalcText: document.getElementById('costCalcText'),
+      profitText: document.getElementById('profitText'),
+      profitCalcText: document.getElementById('profitCalcText'),
+      marginText: document.getElementById('marginText'),
+      tabButtons: document.querySelectorAll('.tab-btn'),
+      tabPanels: document.querySelectorAll('.tab-panel'),
+      newCalcBtn: document.getElementById('newCalcBtn'),
+      saveCalcBtn: document.getElementById('saveCalcBtn'),
+      saveStatus: document.getElementById('saveStatus'),
+      savedList: document.getElementById('savedList'),
+      exportPdfBtn: document.getElementById('exportPdfBtn'),
+      includeCostsPdf: document.getElementById('includeCostsPdf'),
+      installAppBtn: document.getElementById('installAppBtn')
+    };
+
+    function num(value, fallback = 0) {
+      const n = Number(String(value).replace(',', '.'));
+      return Number.isFinite(n) ? n : fallback;
+    }
+
+    function money(value) {
+      return Math.round(value).toLocaleString('ru-RU') + ' ₽';
+    }
+
+    function money2(value) {
+      return Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₽';
+    }
+
+    function roundMetersUpTo10cm(cm) {
+      return Math.ceil(cm / 10) * 10 / 100;
+    }
+
+    function safeJsonParse(value, fallback) {
+      try {
+        return JSON.parse(value) ?? fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function getCostSettings() {
+      return {
+        filmCost: els.filmCost.value,
+        inkCost: els.inkCost.value,
+        powderCost: els.powderCost.value,
+        packageCost: els.packageCost.value,
+        amortizationCost: els.amortizationCost.value,
+        rentCost: els.rentCost.value,
+        salaryCost: els.salaryCost.value,
+        electricityCost: els.electricityCost.value,
+        otherCost: els.otherCost.value,
+        monthlyMeters: els.monthlyMeters.value
+      };
+    }
+
+    function getSettings() {
+      return {
+        printType: els.printType.value,
+        meterPrice: els.meterPrice.value,
+        meterPriceManual,
+        gapX: els.gapX.value,
+        gapY: els.gapY.value,
+        applyEnabled: els.applyEnabled.checked,
+        applyPrice: els.applyPrice.value,
+        cutEnabled: els.cutEnabled.checked,
+        cutPrice: els.cutPrice.value,
+        contourEnabled: els.contourEnabled.checked,
+        contourPrice: els.contourPrice.value
+      };
+    }
+
+    function getCurrentState() {
+      const activeTab = Array.from(els.tabPanels).find(panel => panel.classList.contains('active'))?.id || 'summaryTab';
+      return {
+        prints,
+        settings: getSettings(),
+        costs: getCostSettings(),
+        activeTab,
+        updatedAt: Date.now(),
+        calculation: lastCalculation
+      };
+    }
+
+    function applySettings(settings = {}) {
+      if ('printType' in settings) els.printType.value = settings.printType;
+      if ('meterPrice' in settings) els.meterPrice.value = settings.meterPrice;
+      if ('meterPriceManual' in settings) meterPriceManual = Boolean(settings.meterPriceManual);
+      if ('gapX' in settings) els.gapX.value = settings.gapX;
+      if ('gapY' in settings) els.gapY.value = settings.gapY;
+      if ('applyEnabled' in settings) els.applyEnabled.checked = Boolean(settings.applyEnabled);
+      if ('applyPrice' in settings) els.applyPrice.value = settings.applyPrice;
+      if ('cutEnabled' in settings) els.cutEnabled.checked = Boolean(settings.cutEnabled);
+      if ('cutPrice' in settings) els.cutPrice.value = settings.cutPrice;
+      if ('contourEnabled' in settings) els.contourEnabled.checked = Boolean(settings.contourEnabled);
+      if ('contourPrice' in settings) els.contourPrice.value = settings.contourPrice;
+    }
+
+    function applyCostSettings(costs = {}) {
+      Object.keys(costs).forEach(key => {
+        if (els[key]) els[key].value = costs[key];
+      });
+    }
+
+    function applyCostProfile(type) {
+      const profile = costProfiles[type];
+      if (!profile) return;
+
+      els.filmCost.value = profile.filmCost;
+      els.inkCost.value = profile.inkCost;
+      els.powderCost.value = profile.powderCost;
+      els.packageCost.value = profile.packageCost;
+      els.amortizationCost.value = profile.amortizationCost;
+    }
+
+    function setActiveTab(tabId) {
+      els.tabButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
+      els.tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === tabId));
+    }
+
+    function saveCurrentState() {
+      if (isRestoring) return;
+      localStorage.setItem(CURRENT_STATE_KEY, JSON.stringify(getCurrentState()));
+      els.saveStatus.textContent = 'Автосохранено';
+    }
+
+    function loadCurrentState() {
+      const state = safeJsonParse(localStorage.getItem(CURRENT_STATE_KEY), null);
+      if (!state) return false;
+
+      isRestoring = true;
+      prints = Array.isArray(state.prints) ? state.prints : [];
+      applySettings(state.settings || {});
+      applyCostSettings(state.costs || {});
+      renderPrintRows();
+      calculate();
+      setActiveTab(state.activeTab || 'summaryTab');
+      isRestoring = false;
+      els.saveStatus.textContent = 'Данные восстановлены';
+      return true;
+    }
+
+    function getSavedCalcs() {
+      return safeJsonParse(localStorage.getItem(SAVED_CALCS_KEY), []);
+    }
+
+    function setSavedCalcs(calcs) {
+      localStorage.setItem(SAVED_CALCS_KEY, JSON.stringify(calcs));
+    }
+
+    function formatDate(ts) {
+      return new Date(ts).toLocaleString('ru-RU', {
+        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function renderSavedCalcs() {
+      const calcs = getSavedCalcs();
+      els.savedList.innerHTML = '';
+
+      if (!calcs.length) {
+        els.savedList.innerHTML = '<div class="empty-saved">Сохраненных расчетов пока нет.</div>';
+        return;
+      }
+
+      calcs.forEach(calc => {
+        const item = document.createElement('div');
+        item.className = 'saved-item';
+        item.innerHTML = `
+          <div class="saved-item-title">${calc.name || 'Расчет'}</div>
+          <div class="saved-item-meta">
+            ${formatDate(calc.createdAt || Date.now())}<br>
+            Метраж: ${Number(calc.calculation?.meters || 0).toFixed(2).replace('.', ',')} м · Итого: ${money(calc.calculation?.total || 0)} · Прибыль: ${money(calc.calculation?.profit || 0)}
+          </div>
+          <div class="saved-item-actions">
+            <button class="btn secondary" data-action="loadSaved" data-id="${calc.id}">Открыть</button>
+            <button class="btn delete" data-action="deleteSaved" data-id="${calc.id}">×</button>
+          </div>
+        `;
+        els.savedList.appendChild(item);
+      });
+    }
+
+    function saveNamedCalculation() {
+      calculate();
+      const defaultName = `Расчет ${formatDate(Date.now())}`;
+      const name = prompt('Название расчета', defaultName);
+      if (!name) return;
+
+      const calcs = getSavedCalcs();
+      calcs.unshift({
+        id: String(Date.now()),
+        name,
+        createdAt: Date.now(),
+        ...getCurrentState()
+      });
+      setSavedCalcs(calcs.slice(0, 100));
+      renderSavedCalcs();
+      els.saveStatus.textContent = 'Расчет сохранен';
+    }
+
+    function loadSavedCalculation(id) {
+      const calc = getSavedCalcs().find(item => item.id === id);
+      if (!calc) return;
+
+      isRestoring = true;
+      prints = Array.isArray(calc.prints) ? calc.prints : [];
+      applySettings(calc.settings || {});
+      applyCostSettings(calc.costs || {});
+      renderPrintRows();
+      calculate();
+      setActiveTab('summaryTab');
+      isRestoring = false;
+      saveCurrentState();
+      els.saveStatus.textContent = 'Сохраненный расчет открыт';
+    }
+
+    function deleteSavedCalculation(id) {
+      if (!confirm('Удалить этот расчет?')) return;
+      setSavedCalcs(getSavedCalcs().filter(item => item.id !== id));
+      renderSavedCalcs();
+    }
+
+    function newCalculation() {
+      if (!confirm('Очистить текущие принты и начать новый расчет? Себестоимость сохранится.')) return;
+      prints = [];
+      meterPriceManual = false;
+      renderPrintRows();
+      calculate();
+      setActiveTab('summaryTab');
+      saveCurrentState();
+    }
+
+    function exportPdf() {
+      calculate();
+
+      const date = new Date().toLocaleString('ru-RU');
+      const printRows = prints.length
+        ? prints.map((p, index) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${num(p.width).toFixed(1).replace('.', ',')} × ${num(p.height).toFixed(1).replace('.', ',')} см</td>
+              <td>${Math.max(0, Math.floor(num(p.qty)))}</td>
+            </tr>
+          `).join('')
+        : '<tr><td colspan="3">Принты не добавлены</td></tr>';
+
+      const serviceRows = `
+        <tr><td>DTF / UF DTF печать</td><td>${els.metersText.textContent}</td><td>${els.printCostText.textContent}</td></tr>
+        ${els.applyEnabled.checked ? `<tr><td>Нанесение</td><td>${els.applyCalcText.textContent}</td><td>${els.applyCostText.textContent}</td></tr>` : ''}
+        ${els.cutEnabled.checked ? `<tr><td>Нарезка принтов</td><td>${els.cutCalcText.textContent}</td><td>${els.cutCostText.textContent}</td></tr>` : ''}
+        ${els.contourEnabled.checked ? `<tr><td>Контурная резка</td><td>${els.contourCalcText.textContent}</td><td>${els.contourCostText.textContent}</td></tr>` : ''}
+      `;
+
+      const includeCosts = els.includeCostsPdf.checked;
+      const economyBlock = includeCosts ? `
+        <h2>Внутренняя экономика заказа</h2>
+        <div class="summary muted-summary">
+          <div class="box"><span>Себестоимость</span><strong>${els.summaryCostPriceText.textContent}</strong></div>
+          <div class="box"><span>Прибыль</span><strong>${els.summaryProfitText.textContent}</strong></div>
+          <div class="box"><span>Маржинальность</span><strong>${els.summaryMarginText.textContent}</strong></div>
+          <div class="box"><span>Цена за метр</span><strong>${money(num(els.meterPrice.value))}</strong></div>
+        </div>
+      ` : '';
+
+      const html = `
+        <!DOCTYPE html>
+        <html lang="ru">
+        <head>
+          <meta charset="UTF-8">
+          <title>Коммерческое предложение ARI-PRINT</title>
+          <style>
+            body { font-family: Arial, Helvetica, sans-serif; color: #101828; margin: 0; padding: 30px; }
+            .header { display: flex; justify-content: space-between; gap: 20px; border-bottom: 3px solid #2454e6; padding-bottom: 18px; margin-bottom: 24px; }
+            h1 { margin: 0; color: #2454e6; font-size: 28px; }
+            .brand { color: #667085; margin-top: 6px; font-size: 14px; }
+            .date { text-align: right; color: #667085; font-size: 13px; line-height: 1.45; }
+            h2 { color: #2454e6; font-size: 18px; margin: 24px 0 10px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+            th, td { border: 1px solid #d0d5dd; padding: 10px 11px; text-align: left; font-size: 13px; vertical-align: top; }
+            th { background: #eef2ff; }
+            .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+            .box { border: 1px solid #d0d5dd; border-radius: 10px; padding: 13px; background: #fafcff; }
+            .box span { color: #667085; font-size: 13px; }
+            .box strong { display: block; font-size: 20px; margin-top: 4px; }
+            .total { background: #2454e6; color: white; border-color: #2454e6; }
+            .total span { color: #e8efff; }
+            .muted-summary { opacity: .82; }
+            .note { color: #667085; font-size: 12px; line-height: 1.45; margin-top: 22px; border-top: 1px solid #eaecf0; padding-top: 14px; }
+            .contacts { margin-top: 8px; font-size: 13px; color: #344054; }
+            @media print { body { padding: 20px; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1>Коммерческое предложение</h1>
+              <div class="brand">ARI-PRINT.RU · DTF / UF DTF печать</div>
+              <div class="contacts">Печать, нарезка и нанесение принтов</div>
+            </div>
+            <div class="date">
+              Дата: ${date}<br>
+              Тип печати: ${els.printType.value === 'UF_DTF' ? 'UF DTF' : 'DTF'}<br>
+              ${els.widthBadge.textContent.replace('↔ ', '')}
+            </div>
+          </div>
+
+          <h2>Параметры заказа</h2>
+          <table>
+            <thead><tr><th>№</th><th>Размер принта</th><th>Количество</th></tr></thead>
+            <tbody>${printRows}</tbody>
+          </table>
+
+          <h2>Расчет стоимости</h2>
+          <table>
+            <thead><tr><th>Позиция</th><th>Расчет</th><th>Стоимость</th></tr></thead>
+            <tbody>${serviceRows}</tbody>
+          </table>
+
+          <div class="summary">
+            <div class="box"><span>Метраж</span><strong>${els.metersText.textContent}</strong></div>
+            <div class="box"><span>Цена за изделие</span><strong>${els.itemPriceText.textContent}</strong></div>
+            <div class="box"><span>Заполнение рулона</span><strong>${els.fillPercentText.textContent}</strong></div>
+            <div class="box total"><span>Итого</span><strong>${els.totalText.textContent}</strong></div>
+          </div>
+
+          ${economyBlock}
+
+          <div class="note">
+            Расчет является предварительным и может быть уточнен после проверки макета. Стоимость указана без учета дополнительных работ, не включенных в расчет.
+          </div>
+
+          <script>
+            window.onload = function() { window.print(); };
+          <\/script>
+        </body>
+        </html>
+      `;
+
+      const win = window.open('', '_blank');
+      if (!win) {
+        alert('Браузер заблокировал открытие окна. Разрешите всплывающие окна для экспорта PDF.');
+        return;
+      }
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+    }
+
+    function getDtfPrice(meters) {
+      if (meters < 1) return 1600;
+      if (meters < 4) return 1400;
+      if (meters < 10) return 1300;
+      if (meters < 30) return 1120;
+      if (meters < 50) return 900;
+      return 850;
+    }
+
+    function getUfDtfPrice(meters) {
+      if (meters < 1) return 3000;
+      if (meters < 4) return 2000;
+      if (meters < 10) return 1800;
+      if (meters < 30) return 1600;
+      if (meters < 50) return 1400;
+      return 1300;
+    }
+
+    function getAutoMeterPrice(type, meters) {
+      return type === 'UF_DTF' ? getUfDtfPrice(meters) : getDtfPrice(meters);
+    }
+
+    function getActiveRollWidth() {
+      return (els.cutEnabled.checked || els.contourEnabled.checked) ? CUT_ROLL_WIDTH_CM : FULL_ROLL_WIDTH_CM;
+    }
+
+    function getApplyPriceByItems(itemsQty) {
+      if (itemsQty <= 0) return 0;
+      if (itemsQty < 4) return 750;
+      if (itemsQty < 10) return 200;
+      if (itemsQty < 20) return 100;
+      if (itemsQty < 100) return 75;
+      if (itemsQty < 200) return 50;
+      return 40;
+    }
+
+    function totalPrintsQty() {
+      return prints.reduce((sum, p) => sum + Math.max(0, Math.floor(num(p.qty))), 0);
+    }
+
+    function resolvePrintOrientation(p) {
+      const width = Math.max(0.1, num(p.width));
+      const height = Math.max(0.1, num(p.height));
+
+      if (p.rotation === '90') return { w: height, h: width, rotated: true };
+      if (p.rotation === '0') return { w: width, h: height, rotated: false };
+
+      const qty = Math.max(1, Math.floor(num(p.qty, 1)));
+      const gapX = Math.max(0, num(els.gapX.value, 0.3));
+      const gapY = Math.max(0, num(els.gapY.value, 0.3));
+      const rollWidth = getActiveRollWidth();
+
+      function score(w, h) {
+        const perRow = Math.max(1, Math.floor((rollWidth + gapX) / (w + gapX)));
+        const rows = Math.ceil(qty / perRow);
+        return rows * h + Math.max(0, rows - 1) * gapY;
+      }
+
+      const normalScore = width <= rollWidth ? score(width, height) : Infinity;
+      const rotatedScore = height <= rollWidth ? score(height, width) : Infinity;
+
+      if (rotatedScore < normalScore) return { w: height, h: width, rotated: true };
+      return { w: width, h: height, rotated: false };
+    }
+
+    function expandPrints(gapX, gapY) {
+      const expanded = [];
+      prints.forEach((p, printIndex) => {
+        const qty = Math.max(0, Math.floor(num(p.qty)));
+        const orient = resolvePrintOrientation(p);
+        for (let i = 0; i < qty; i++) {
+          expanded.push({
+            printIndex,
+            originalWidth: Math.max(0.1, num(p.width)),
+            originalHeight: Math.max(0.1, num(p.height)),
+            width: orient.w,
+            height: orient.h,
+            rotated: orient.rotated
+          });
+        }
+      });
+      return expanded;
+    }
+
+    function packLayout() {
+      const rollWidth = getActiveRollWidth();
+      const gapX = Math.max(0, num(els.gapX.value, 0.3));
+      const gapY = Math.max(0, num(els.gapY.value, 0.3));
+      const items = expandPrints(gapX, gapY);
+
+      items.sort((a, b) => Math.max(b.width, b.height) - Math.max(a.width, a.height));
+
+      const placed = [];
+      let x = 0;
+      let y = 0;
+      let rowHeight = 0;
+      let maxY = 0;
+
+      items.forEach(item => {
+        let w = item.width;
+        let h = item.height;
+
+        if (x > 0 && x + w > rollWidth) {
+          x = 0;
+          y += rowHeight + gapY;
+          rowHeight = 0;
+        }
+
+        if (w > rollWidth) w = rollWidth;
+
+        placed.push({
+          x,
+          y,
+          w,
+          h,
+          printIndex: item.printIndex,
+          label: `${item.originalWidth}x${item.originalHeight}`,
+          rotated: item.rotated
+        });
+
+        x += w + gapX;
+        rowHeight = Math.max(rowHeight, h);
+        maxY = Math.max(maxY, y + h);
+      });
+
+      return { placed, totalLengthCm: maxY, rollWidth };
+    }
+
+    function getFill(i) {
+      const colors = ['#dbe6ff', '#e7f0ff', '#d6ecff', '#e8e2ff', '#daf5e8'];
+      return colors[i % colors.length];
+    }
+
+    function draw(layout) {
+      const canvas = els.canvas;
+      const ctx = canvas.getContext('2d');
+      const widthPx = layout.rollWidth * SCALE;
+      const naturalHeightPx = Math.ceil(layout.totalLengthCm * SCALE) + 20;
+      const heightPx = Math.max(260, Math.min(naturalHeightPx, MAX_CANVAS_HEIGHT_PX));
+      const scaleY = naturalHeightPx > MAX_CANVAS_HEIGHT_PX
+        ? (MAX_CANVAS_HEIGHT_PX - 20) / Math.max(1, layout.totalLengthCm)
+        : SCALE;
+
+      canvas.width = widthPx;
+      canvas.height = heightPx;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      layout.placed.forEach(rect => {
+        const x = rect.x * SCALE;
+        const y = rect.y * scaleY;
+        const w = rect.w * SCALE;
+        const h = Math.max(1, rect.h * scaleY);
+
+        ctx.fillStyle = getFill(rect.printIndex);
+        ctx.strokeStyle = '#70a0ff';
+        ctx.lineWidth = 1;
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeRect(x, y, w, h);
+
+        if (w > 24 && h > 14) {
+          ctx.fillStyle = '#0b2f76';
+          ctx.font = '12px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(rect.label, x + w / 2, y + h / 2);
+        }
+      });
+
+      if (naturalHeightPx > MAX_CANVAS_HEIGHT_PX) {
+        ctx.fillStyle = 'rgba(255,255,255,.92)';
+        ctx.fillRect(8, 8, 250, 28);
+        ctx.fillStyle = '#667085';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Визуализация сжата по высоте', 18, 22);
+      }
+    }
+
+    function renderPrintRows() {
+      els.printsList.innerHTML = '';
+      els.emptyPrints.style.display = prints.length ? 'none' : 'block';
+
+      prints.forEach((p, index) => {
+        const row = document.createElement('div');
+        row.className = 'print-row';
+        row.innerHTML = `
+          <input type="number" min="0.1" step="0.1" value="${p.width}" data-index="${index}" data-field="width" title="Ширина, см">
+          <input type="number" min="0.1" step="0.1" value="${p.height}" data-index="${index}" data-field="height" title="Высота, см">
+          <input type="number" min="1" step="1" value="${p.qty}" data-index="${index}" data-field="qty" title="Количество">
+          <button class="btn auto" data-index="${index}" data-action="auto">AUTO</button>
+          <button class="btn rotate" data-index="${index}" data-action="rotate">${p.rotation === '90' ? '0°' : '90°'}</button>
+          <button class="btn delete" data-index="${index}" data-action="delete">×</button>
+        `;
+        els.printsList.appendChild(row);
+      });
+    }
+
+    function calculate() {
+      const layout = packLayout();
+      els.widthBadge.textContent = `↔ Ширина печати: ${layout.rollWidth} см`;
+
+      const meters = roundMetersUpTo10cm(layout.totalLengthCm);
+      const type = els.printType.value;
+      const autoPrice = getAutoMeterPrice(type, meters);
+
+      if (!meterPriceManual || !els.meterPrice.value) {
+        els.meterPrice.value = autoPrice;
+      }
+
+      const meterPrice = prints.length ? num(els.meterPrice.value, autoPrice) : 0;
+      const printCost = meters * meterPrice;
+      const itemsQty = prints.length ? Math.max(1, Math.floor(num(prints[0]?.qty || 1, 1))) : 0;
+      const totalPrints = totalPrintsQty();
+      const applyPriceAuto = getApplyPriceByItems(totalPrints);
+
+      if (document.activeElement !== els.applyPrice) els.applyPrice.value = applyPriceAuto;
+
+      const applyPrice = totalPrints > 0 ? num(els.applyPrice.value, applyPriceAuto) : 0;
+      const applyCost = els.applyEnabled.checked ? totalPrints * applyPrice : 0;
+      const cutCost = els.cutEnabled.checked ? meters * num(els.cutPrice.value, 0) : 0;
+      const contourCost = els.contourEnabled.checked ? meters * num(els.contourPrice.value, 0) : 0;
+      const total = printCost + applyCost + cutCost + contourCost;
+
+      const usedAreaCm2 = prints.reduce((sum, p) => sum + (num(p.width) * num(p.height) * Math.max(0, Math.floor(num(p.qty)))), 0);
+      const rollAreaCm2 = layout.rollWidth * Math.max(1, layout.totalLengthCm);
+      const fillPercent = prints.length && rollAreaCm2 > 0 ? (usedAreaCm2 / rollAreaCm2) * 100 : 0;
+      const wastePercent = Math.max(0, 100 - fillPercent);
+      const itemPrice = itemsQty > 0 ? total / itemsQty : 0;
+
+      const variableCostPerMeter = num(els.filmCost.value) + num(els.inkCost.value) + num(els.powderCost.value) + num(els.packageCost.value) + num(els.amortizationCost.value);
+      const monthlyFixedCosts = num(els.rentCost.value) + num(els.salaryCost.value) + num(els.electricityCost.value) + num(els.otherCost.value);
+      const fixedCostPerMeter = monthlyFixedCosts / Math.max(1, num(els.monthlyMeters.value, 1));
+      const fullCostPerMeter = variableCostPerMeter + fixedCostPerMeter;
+      const orderCostPrice = meters * fullCostPerMeter;
+      const profit = total - orderCostPrice;
+      const margin = total > 0 ? (profit / total) * 100 : 0;
+
+      lastCalculation = { meters, total, itemPrice, orderCostPrice, profit, margin };
+
+      els.metersText.textContent = meters.toFixed(2).replace('.', ',') + ' м';
+      els.printCostText.textContent = money(printCost);
+      els.applyCostText.textContent = money(applyCost);
+      els.cutCostText.textContent = money(cutCost);
+      els.contourCostText.textContent = money(contourCost);
+      els.itemPriceText.textContent = money2(itemPrice);
+      els.totalText.textContent = money(total);
+      els.costPriceText.textContent = money(orderCostPrice);
+      els.profitText.textContent = money(profit);
+      els.marginText.textContent = `${margin.toFixed(1)}%`;
+      els.summaryCostPriceText.textContent = money(orderCostPrice);
+      els.summaryProfitText.textContent = money(profit);
+      els.summaryMarginText.textContent = `${margin.toFixed(1)}%`;
+      els.fillPercentText.textContent = `${fillPercent.toFixed(1)}%`;
+
+      els.printCalcText.textContent = prints.length ? `(${meters.toFixed(2).replace('.', ',')} м × ${money(meterPrice)} за м)` : '(добавьте первую строку принтов)';
+      els.fillPercentCalcText.textContent = prints.length ? `(${fillPercent.toFixed(1)}% заполнение · ${wastePercent.toFixed(1)}% потери)` : '(добавьте принты для расчета заполнения)';
+      els.applyCalcText.textContent = totalPrints > 0 ? `(${totalPrints} нанесений × ${money(applyPrice)} за нанесение)` : '(нет принтов для нанесения)';
+      els.cutCalcText.textContent = `(${meters.toFixed(2).replace('.', ',')} м × ${money(num(els.cutPrice.value, 0))} за м)`;
+      els.contourCalcText.textContent = `(${meters.toFixed(2).replace('.', ',')} м × ${money(num(els.contourPrice.value, 0))} за м)`;
+      els.itemCalcText.textContent = itemsQty > 0 ? `(${money(total)} / ${itemsQty} изделий)` : '(добавьте первую строку принтов)';
+      els.totalCalcText.textContent = `(${money(printCost)} печать + ${money(applyCost)} нанесение + ${money(cutCost)} нарезка + ${money(contourCost)} контур)`;
+      els.costCalcText.textContent = `(${meters.toFixed(2).replace('.', ',')} м × ${money2(fullCostPerMeter)} себестоимость за м)`;
+      els.profitCalcText.textContent = `(${money(total)} - ${money(orderCostPrice)})`;
+      els.summaryCostCalcText.textContent = `(${meters.toFixed(2).replace('.', ',')} м × ${money2(fullCostPerMeter)} себестоимость за м)`;
+      els.summaryProfitCalcText.textContent = `(${money(total)} - ${money(orderCostPrice)})`;
+
+      els.applyLine.style.display = els.applyEnabled.checked ? '' : 'none';
+      els.cutLine.style.display = els.cutEnabled.checked ? '' : 'none';
+      els.contourLine.style.display = els.contourEnabled.checked ? '' : 'none';
+
+      draw(layout);
+      saveCurrentState();
+    }
+
+    function updateAndCalculate() {
+      renderPrintRows();
+      calculate();
+    }
+
+    els.printsList.addEventListener('input', (e) => {
+      const index = Number(e.target.dataset.index);
+      const field = e.target.dataset.field;
+      if (!Number.isFinite(index) || !field) return;
+      prints[index][field] = field === 'qty' ? Math.floor(num(e.target.value, 1)) : num(e.target.value, 1);
+      calculate();
+    });
+
+    els.printsList.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const index = Number(btn.dataset.index);
+      const action = btn.dataset.action;
+      if (!Number.isFinite(index)) return;
+
+      if (action === 'delete') prints.splice(index, 1);
+      if (action === 'auto') prints[index].rotation = 'auto';
+      if (action === 'rotate') prints[index].rotation = prints[index].rotation === '90' ? '0' : '90';
+      updateAndCalculate();
+    });
+
+    els.addPrint.addEventListener('click', () => {
+      prints.push({ width: 10, height: 10, qty: prints[0]?.qty || 1, rotation: 'auto' });
+      updateAndCalculate();
+    });
+
+    ['change', 'input'].forEach(eventName => {
+      [els.gapX, els.gapY, els.applyEnabled, els.cutEnabled, els.contourEnabled, els.cutPrice, els.contourPrice]
+        .forEach(el => el.addEventListener(eventName, calculate));
+    });
+
+    els.meterPrice.addEventListener('input', () => {
+      meterPriceManual = true;
+      calculate();
+    });
+
+    els.printType.addEventListener('change', () => {
+      meterPriceManual = false;
+      applyCostProfile(els.printType.value);
+      calculate();
+    });
+
+    els.applyPrice.addEventListener('input', calculate);
+
+    [els.filmCost, els.inkCost, els.powderCost, els.packageCost, els.amortizationCost, els.rentCost, els.salaryCost, els.electricityCost, els.otherCost, els.monthlyMeters]
+      .forEach(el => el.addEventListener('input', calculate));
+
+    els.tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        setActiveTab(btn.dataset.tab);
+        saveCurrentState();
+      });
+    });
+
+    els.saveCalcBtn.addEventListener('click', saveNamedCalculation);
+    els.exportPdfBtn.addEventListener('click', exportPdf);
+    els.newCalcBtn.addEventListener('click', newCalculation);
+
+    els.savedList.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (btn.dataset.action === 'loadSaved') loadSavedCalculation(id);
+      if (btn.dataset.action === 'deleteSaved') deleteSavedCalculation(id);
+    });
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      els.installAppBtn.style.display = '';
+    });
+
+    els.installAppBtn.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      els.installAppBtn.style.display = 'none';
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js').catch(() => {
+          console.warn('Service worker не зарегистрирован. Проверьте, что сайт открыт через HTTPS или localhost.');
+        });
+      });
+    }
+
+    if (!loadCurrentState()) {
+      applyCostProfile('DTF');
+      renderPrintRows();
+      calculate();
+    }
+    renderSavedCalcs();
+  </script>
+</body>
+</html>

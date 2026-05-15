@@ -103,6 +103,19 @@
       text-align: right;
     }
 
+    .cost-pdf-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #667085;
+      background: #fff;
+      border: 1px solid #d0d5dd;
+      border-radius: 8px;
+      padding: 0 10px;
+      height: 35px;
+    }
+
     .layout {
       display: grid;
       grid-template-columns: 1.4fr 1fr;
@@ -463,6 +476,7 @@
     @media (max-width: 640px) {
       body {
         background: #f5f7fb;
+        padding-bottom: 88px;
       }
 
       .page {
@@ -471,69 +485,184 @@
       }
 
       .header {
-        flex-direction: column;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
         gap: 10px;
-        margin-bottom: 12px;
+        margin: -10px -10px 10px;
+        padding: 10px 12px;
+        background: rgba(245, 247, 251, .94);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(208, 213, 221, .7);
       }
 
       .title h1 {
-        font-size: 22px;
+        font-size: 18px;
+        line-height: 1.1;
+        white-space: nowrap;
       }
 
       .brand {
-        font-size: 13px;
-        margin-top: 4px;
+        font-size: 11px;
+        margin-top: 2px;
       }
 
       .version {
-        padding-top: 0;
-        font-size: 13px;
-        color: var(--muted);
+        display: none;
       }
 
       .top-actions {
-        justify-content: flex-start;
-        gap: 6px;
-        margin-top: 8px;
+        position: fixed;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        z-index: 100;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 7px;
+        margin: 0;
+        padding: 8px;
+        background: rgba(255,255,255,.94);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(208,213,221,.9);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(16,24,40,.16);
       }
 
-      .top-actions .btn,
-      .top-actions label {
-        height: 34px !important;
+      .top-actions .btn {
+        height: 42px !important;
+        padding: 0 6px !important;
         font-size: 12px !important;
-        padding: 0 9px !important;
+        border-radius: 12px;
+      }
+
+      #newCalcBtn::before { content: '+ '; }
+      #saveCalcBtn { font-size: 0 !important; }
+      #saveCalcBtn::after { content: 'Сохранить'; font-size: 12px; }
+      #exportPdfBtn { font-size: 0 !important; }
+      #exportPdfBtn::after { content: 'PDF'; font-size: 12px; }
+      #installAppBtn { font-size: 0 !important; }
+      #installAppBtn::after { content: 'App'; font-size: 12px; }
+
+      .cost-pdf-toggle {
+        position: fixed;
+        right: 12px;
+        bottom: 66px;
+        z-index: 101;
+        height: 32px !important;
+        font-size: 11px !important;
+        border-radius: 999px;
+        box-shadow: 0 6px 18px rgba(16,24,40,.12);
+      }
+
+      .cost-pdf-toggle input {
+        width: 16px;
+        height: 16px;
       }
 
       .save-status {
-        text-align: left;
-        font-size: 11px;
-        margin-top: 5px;
+        display: none;
       }
 
       .layout {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
         gap: 12px;
       }
 
-      .left,
       .right {
+        order: -1;
+        gap: 10px;
+      }
+
+      .left {
         gap: 12px;
+      }
+
+      .tabs {
+        position: sticky;
+        top: 58px;
+        z-index: 40;
+        overflow-x: auto;
+        padding: 6px 0 8px;
+        margin: 0;
+        gap: 8px;
+        background: #f5f7fb;
+      }
+
+      .tab-btn {
+        white-space: nowrap;
+        padding: 9px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        background: #fff;
       }
 
       .card {
         padding: 14px;
-        border-radius: 16px;
-        box-shadow: 0 1px 6px rgba(16, 24, 40, .05);
+        border-radius: 18px;
+        box-shadow: 0 2px 10px rgba(16, 24, 40, .05);
       }
 
       .card h2 {
-        font-size: 18px;
-        margin-bottom: 14px;
+        font-size: 17px;
+        margin-bottom: 12px;
+      }
+
+      .summary {
+        background: linear-gradient(135deg, #2454e6, #6d5dfc);
+        color: #fff;
+      }
+
+      .summary h2 {
+        color: #fff;
+        font-size: 16px;
+        opacity: .92;
+      }
+
+      .summary p {
+        font-size: 14px;
+        margin-bottom: 10px;
+        color: rgba(255,255,255,.92);
+      }
+
+      .summary p:nth-of-type(7) {
+        margin: 12px -2px 12px;
+        padding: 14px;
+        background: rgba(255,255,255,.14);
+        border-radius: 16px;
+        font-size: 20px;
+        color: #fff;
+      }
+
+      .summary p:nth-of-type(7) span:first-child {
+        font-size: 26px;
+      }
+
+      .summary span {
+        color: #fff;
+      }
+
+      .summary .calc-note {
+        color: rgba(255,255,255,.72);
+        font-size: 10.5px;
+      }
+
+      .economy-line {
+        border-top-color: rgba(255,255,255,.18);
+        color: rgba(255,255,255,.86);
+      }
+
+      .preview-wrap {
+        display: none;
       }
 
       .params-grid {
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        gap: 10px;
       }
 
       label {
@@ -542,9 +671,9 @@
 
       input,
       select {
-        height: 38px;
+        height: 40px;
         font-size: 16px;
-        border-radius: 10px;
+        border-radius: 12px;
       }
 
       .services {
@@ -560,11 +689,15 @@
 
       .service-price {
         grid-template-columns: 70px 1fr;
-        margin-left: 65px;
+        margin-left: 62px;
       }
 
       .hint {
         font-size: 12px;
+        max-width: 230px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .switch {
@@ -591,7 +724,7 @@
         padding: 12px;
         margin-bottom: 10px;
         border: 1px solid var(--line);
-        border-radius: 14px;
+        border-radius: 16px;
         background: #fafcff;
       }
 
@@ -600,9 +733,9 @@
       }
 
       .print-row .btn {
-        height: 36px;
+        height: 38px;
         font-size: 13px;
-        border-radius: 10px;
+        border-radius: 12px;
       }
 
       .print-row .delete {
@@ -611,51 +744,15 @@
 
       .btn.add {
         width: 100%;
-        height: 42px;
-        border-radius: 12px;
+        height: 44px;
+        border-radius: 14px;
         margin-top: 10px;
+        font-weight: 700;
       }
 
-      .tabs {
-        overflow-x: auto;
-        padding-bottom: 2px;
-        margin-bottom: 12px;
-        gap: 8px;
-      }
-
-      .tab-btn {
-        white-space: nowrap;
-        padding: 9px 13px;
-        border-radius: 999px;
-        font-size: 13px;
-      }
-
-      .summary p {
-        font-size: 15px;
-        margin-bottom: 11px;
-      }
-
-      .calc-note {
-        font-size: 11px;
-      }
-
-      .preview-top {
-        justify-content: flex-start;
-        margin-bottom: 10px;
-      }
-
-      .width-badge {
-        font-size: 13px;
-        padding: 7px 10px;
-      }
-
-      .canvas-scroll {
-        max-height: 280px;
-        border-radius: 12px;
-      }
-
-      canvas {
-        max-width: none;
+      .small-note,
+      .empty-prints {
+        font-size: 12px;
       }
 
       .cost-grid {
@@ -686,7 +783,7 @@
           <button class="btn secondary" id="newCalcBtn">Новый расчет</button>
           <button class="btn secondary" id="installAppBtn" style="display:none;">Установить</button>
           <button class="btn success" id="saveCalcBtn">Сохранить расчет</button>
-          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#667085;background:#fff;border:1px solid #d0d5dd;border-radius:8px;padding:0 10px;height:35px;">
+          <label class="cost-pdf-toggle">
             <input type="checkbox" id="includeCostsPdf">
             Себестоимость
           </label>

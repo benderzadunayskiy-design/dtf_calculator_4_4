@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ari-print-pwa-v46';
+const CACHE_NAME = 'ari-print-pwa-v47';
 
 const FILES_TO_CACHE = [
 './',

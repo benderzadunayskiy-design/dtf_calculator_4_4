@@ -103,19 +103,6 @@
       text-align: right;
     }
 
-    .cost-pdf-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: #667085;
-      background: #fff;
-      border: 1px solid #d0d5dd;
-      border-radius: 8px;
-      padding: 0 10px;
-      height: 35px;
-    }
-
     .layout {
       display: grid;
       grid-template-columns: 1.4fr 1fr;
@@ -267,6 +254,18 @@
     }
 
     .btn:hover { background: var(--blue-dark); }
+
+    .btn.summary-copy {
+      width: 100%;
+      margin-top: 6px;
+      background: var(--success);
+      font-weight: 700;
+    }
+
+    .btn.summary-copy:hover,
+    .btn.summary-copy.copied {
+      background: #0e9f5d;
+    }
     .btn.auto { background: #68b3d4; }
     .btn.rotate { background: #2762cf; }
     .btn.delete { background: var(--danger); width: 34px; padding: 0; }
@@ -522,7 +521,7 @@
         bottom: 10px;
         z-index: 100;
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
         gap: 7px;
         margin: 0;
         padding: 8px;
@@ -547,22 +546,6 @@
       #exportPdfBtn::after { content: 'PDF'; font-size: 12px; }
       #installAppBtn { font-size: 0 !important; }
       #installAppBtn::after { content: 'App'; font-size: 12px; }
-
-      .cost-pdf-toggle {
-        position: fixed;
-        right: 12px;
-        bottom: 66px;
-        z-index: 101;
-        height: 32px !important;
-        font-size: 11px !important;
-        border-radius: 999px;
-        box-shadow: 0 6px 18px rgba(16,24,40,.12);
-      }
-
-      .cost-pdf-toggle input {
-        width: 16px;
-        height: 16px;
-      }
 
       .save-status {
         display: none;
@@ -784,10 +767,6 @@
           <button class="btn secondary" id="newCalcBtn">Новый расчет</button>
           <button class="btn secondary" id="installAppBtn" style="display:none;">Установить</button>
           <button class="btn success" id="saveCalcBtn">Сохранить расчет</button>
-          <label class="cost-pdf-toggle">
-            <input type="checkbox" id="includeCostsPdf">
-            Себестоимость
-          </label>
           <button class="btn secondary" id="exportPdfBtn">PDF</button>
         </div>
         <div class="save-status" id="saveStatus">Автосохранение включено</div>
@@ -898,9 +877,7 @@
           <p id="contourLine">Контурная резка: <span id="contourCostText">0 ₽</span><span class="calc-note" id="contourCalcText"></span></p>
           <p>Цена за изделие: <span id="itemPriceText">0 ₽</span><span class="calc-note" id="itemCalcText"></span></p>
           <p>Итого: <span id="totalText">0 ₽</span><span class="calc-note" id="totalCalcText"></span></p>
-          <p class="economy-line">Себестоимость: <span id="summaryCostPriceText">0 ₽</span><span class="calc-note" id="summaryCostCalcText"></span></p>
-          <p class="economy-line">Прибыль: <span id="summaryProfitText">0 ₽</span><span class="calc-note" id="summaryProfitCalcText"></span></p>
-          <p class="economy-line">Маржинальность: <span id="summaryMarginText">0%</span></p>
+          <button class="btn summary-copy" id="copyClientBtn">Скопировать для клиента</button>
         </div>
 
         <div class="card preview-wrap">
@@ -1061,11 +1038,7 @@
       contourCostText: document.getElementById('contourCostText'),
       itemPriceText: document.getElementById('itemPriceText'),
       totalText: document.getElementById('totalText'),
-      summaryCostPriceText: document.getElementById('summaryCostPriceText'),
-      summaryCostCalcText: document.getElementById('summaryCostCalcText'),
-      summaryProfitText: document.getElementById('summaryProfitText'),
-      summaryProfitCalcText: document.getElementById('summaryProfitCalcText'),
-      summaryMarginText: document.getElementById('summaryMarginText'),
+      copyClientBtn: document.getElementById('copyClientBtn'),
       fillPercentText: document.getElementById('fillPercentText'),
       fillPercentCalcText: document.getElementById('fillPercentCalcText'),
       printCalcText: document.getElementById('printCalcText'),
@@ -1100,7 +1073,6 @@
       saveStatus: document.getElementById('saveStatus'),
       savedList: document.getElementById('savedList'),
       exportPdfBtn: document.getElementById('exportPdfBtn'),
-      includeCostsPdf: document.getElementById('includeCostsPdf'),
       installAppBtn: document.getElementById('installAppBtn')
     };
 
@@ -1320,6 +1292,63 @@
       saveCurrentState();
     }
 
+    function buildClientCopyText() {
+      const formatSize = value => num(value).toFixed(1).replace('.', ',').replace(',0', '');
+      const printLines = prints.map((p, index) => {
+        const qty = Math.max(0, Math.floor(num(p.qty)));
+        return `${index + 1}. ${formatSize(p.width)} × ${formatSize(p.height)} см — ${qty} шт.`;
+      });
+
+      const serviceLines = [`Печать: ${els.printCostText.textContent}`];
+      if (els.applyEnabled.checked) serviceLines.push(`Нанесение: ${els.applyCostText.textContent}`);
+      if (els.cutEnabled.checked) serviceLines.push(`Нарезка: ${els.cutCostText.textContent}`);
+      if (els.contourEnabled.checked) serviceLines.push(`Контурная резка: ${els.contourCostText.textContent}`);
+
+      return [
+        'Расчет заказа ARI-PRINT',
+        `Тип печати: ${els.printType.value === 'UF_DTF' ? 'UF DTF' : 'DTF'}`,
+        '',
+        'Позиции:',
+        ...printLines,
+        '',
+        ...serviceLines,
+        `Цена за изделие: ${els.itemPriceText.textContent}`,
+        `Итого: ${els.totalText.textContent}`,
+        '',
+        'Расчет предварительный и может быть уточнен после проверки макета.'
+      ].join('\n');
+    }
+
+    async function copyForClient() {
+      if (!prints.length) {
+        alert('Сначала добавьте хотя бы один принт.');
+        return;
+      }
+
+      calculate();
+      const text = buildClientCopyText();
+
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (error) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+      }
+
+      els.copyClientBtn.textContent = 'Скопировано ✓';
+      els.copyClientBtn.classList.add('copied');
+      window.setTimeout(() => {
+        els.copyClientBtn.textContent = 'Скопировать для клиента';
+        els.copyClientBtn.classList.remove('copied');
+      }, 1600);
+    }
+
     function exportPdf() {
       calculate();
 
@@ -1340,17 +1369,6 @@
         ${els.cutEnabled.checked ? `<tr><td>Нарезка принтов</td><td>${els.cutCalcText.textContent}</td><td>${els.cutCostText.textContent}</td></tr>` : ''}
         ${els.contourEnabled.checked ? `<tr><td>Контурная резка</td><td>${els.contourCalcText.textContent}</td><td>${els.contourCostText.textContent}</td></tr>` : ''}
       `;
-
-      const includeCosts = els.includeCostsPdf.checked;
-      const economyBlock = includeCosts ? `
-        <h2>Внутренняя экономика заказа</h2>
-        <div class="summary muted-summary">
-          <div class="box"><span>Себестоимость</span><strong>${els.summaryCostPriceText.textContent}</strong></div>
-          <div class="box"><span>Прибыль</span><strong>${els.summaryProfitText.textContent}</strong></div>
-          <div class="box"><span>Маржинальность</span><strong>${els.summaryMarginText.textContent}</strong></div>
-          <div class="box"><span>Цена за метр</span><strong>${money(num(els.meterPrice.value))}</strong></div>
-        </div>
-      ` : '';
 
       const html = `
         <!DOCTYPE html>
@@ -1412,8 +1430,6 @@
             <div class="box"><span>Заполнение рулона</span><strong>${els.fillPercentText.textContent}</strong></div>
             <div class="box total"><span>Итого</span><strong>${els.totalText.textContent}</strong></div>
           </div>
-
-          ${economyBlock}
 
           <div class="note">
             Расчет является предварительным и может быть уточнен после проверки макета. Стоимость указана без учета дополнительных работ, не включенных в расчет.
@@ -1689,9 +1705,6 @@
       els.costPriceText.textContent = money(orderCostPrice);
       els.profitText.textContent = money(profit);
       els.marginText.textContent = `${margin.toFixed(1)}%`;
-      els.summaryCostPriceText.textContent = money(orderCostPrice);
-      els.summaryProfitText.textContent = money(profit);
-      els.summaryMarginText.textContent = `${margin.toFixed(1)}%`;
       els.fillPercentText.textContent = `${fillPercent.toFixed(1)}%`;
 
       els.printCalcText.textContent = prints.length ? `(${meters.toFixed(2).replace('.', ',')} м × ${money(meterPrice)} за м)` : '(добавьте первую строку принтов)';
@@ -1703,8 +1716,6 @@
       els.totalCalcText.textContent = `(${money(printCost)} печать + ${money(applyCost)} нанесение + ${money(cutCost)} нарезка + ${money(contourCost)} контур)`;
       els.costCalcText.textContent = `(${meters.toFixed(2).replace('.', ',')} м × ${money2(fullCostPerMeter)} себестоимость за м)`;
       els.profitCalcText.textContent = `(${money(total)} - ${money(orderCostPrice)})`;
-      els.summaryCostCalcText.textContent = `(${meters.toFixed(2).replace('.', ',')} м × ${money2(fullCostPerMeter)} себестоимость за м)`;
-      els.summaryProfitCalcText.textContent = `(${money(total)} - ${money(orderCostPrice)})`;
 
       els.applyLine.style.display = els.applyEnabled.checked ? '' : 'none';
       els.cutLine.style.display = els.cutEnabled.checked ? '' : 'none';
@@ -1774,6 +1785,7 @@
     });
 
     els.saveCalcBtn.addEventListener('click', saveNamedCalculation);
+    els.copyClientBtn.addEventListener('click', copyForClient);
     els.exportPdfBtn.addEventListener('click', exportPdf);
     els.newCalcBtn.addEventListener('click', newCalculation);
 

@@ -1319,7 +1319,7 @@
       ].join('\n');
     }
 
-    async function copyForClient() {
+    function copyForClient() {
       if (!prints.length) {
         alert('Сначала добавьте хотя бы один принт.');
         return;
@@ -1327,18 +1327,26 @@
 
       calculate();
       const text = buildClientCopyText();
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
 
+      let copied = false;
       try {
-        await navigator.clipboard.writeText(text);
+        copied = document.execCommand('copy');
       } catch (error) {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
+        copied = false;
+      }
+      textarea.remove();
+
+      if (!copied && navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).catch(() => {});
       }
 
       els.copyClientBtn.textContent = 'Скопировано ✓';

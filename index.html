@@ -389,6 +389,65 @@
 
     .price-table strong { color: var(--text); }
 
+    .price-details {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .price-details > summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 20px;
+      color: var(--blue);
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+    }
+
+    .price-details > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .price-details > summary::after {
+      content: 'Развернуть';
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .price-details[open] > summary {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .price-details[open] > summary::after {
+      content: 'Свернуть';
+    }
+
+    .price-details-content {
+      padding: 18px 20px 20px;
+    }
+
+    .price-details h3 {
+      margin: 18px 0 10px;
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    .price-details h3:first-child {
+      margin-top: 0;
+    }
+
+    .price-note {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
     .tabs {
       display: flex;
       gap: 10px;
@@ -849,7 +908,7 @@
                 </label>
                 <div>
                   <div>Нанесение</div>
-                  <div class="hint">Автоцена по тиражу, можно изменить вручную</div>
+                  <div class="hint">1–2 изделия — по формату, от 3 — по тиражу; цену можно изменить вручную</div>
                 </div>
               </div>
             </div>
@@ -902,7 +961,6 @@
       <section class="right">
         <div class="tabs">
           <button class="tab-btn active" data-tab="summaryTab">Расчет</button>
-          <button class="tab-btn" data-tab="costTab">Себестоимость</button>
           <button class="tab-btn" data-tab="savedTab">Сохраненные</button>
         </div>
 
@@ -931,7 +989,7 @@
 
         </div>
 
-        <div id="costTab" class="tab-panel">
+        <div id="costTab" class="tab-panel" hidden aria-hidden="true">
           <div class="card">
           <h2>Себестоимость</h2>
 
@@ -1006,13 +1064,24 @@
           </div>
         </div>
 
-        <div class="card">
-          <h2>Прайс</h2>
-          <div class="price-table">
-            <div><strong>DTF</strong><br>&lt;1 м — 1600 ₽<br>1–3 м — 1400 ₽<br>4–9 м — 1300 ₽<br>10–29 м — 1120 ₽<br>30–49 м — 900 ₽<br>50+ м — 850 ₽</div>
-            <div><strong>UF DTF</strong><br>&lt;1 м — 3000 ₽<br>1–3 м — 2000 ₽<br>4–9 м — 1800 ₽<br>10–29 м — 1600 ₽<br>30–49 м — 1400 ₽<br>50+ м — 1300 ₽</div>
+        <details class="card price-details">
+          <summary>Прайс и подсказки</summary>
+          <div class="price-details-content">
+            <h3>Печать по метражу</h3>
+            <div class="price-table">
+              <div><strong>DTF</strong><br>&lt;1 м — 1600 ₽<br>1–3 м — 1400 ₽<br>4–9 м — 1300 ₽<br>10–29 м — 1120 ₽<br>30–49 м — 900 ₽<br>50+ м — 850 ₽</div>
+              <div><strong>UF DTF</strong><br>&lt;1 м — 3000 ₽<br>1–3 м — 2000 ₽<br>4–9 м — 1800 ₽<br>10–29 м — 1600 ₽<br>30–49 м — 1400 ₽<br>50+ м — 1300 ₽</div>
+            </div>
+
+            <h3>Нанесение</h3>
+            <p class="price-note">Розничная цена применяется для 1–2 изделий и определяется по размеру принта в первой строке.</p>
+            <div class="price-table">
+              <div><strong>Розница: 1–2 изделия</strong><br>Меньше A5 — 650 ₽/шт<br>A5–A4 — 750 ₽/шт<br>A3 — 950 ₽/шт<br>A2 — 1200 ₽/шт</div>
+              <div><strong>Тиражная цена</strong><br>3 нанесения — 750 ₽/шт<br>4–9 — 200 ₽/шт<br>10–19 — 100 ₽/шт<br>20–99 — 75 ₽/шт<br>100–199 — 50 ₽/шт<br>200+ — 40 ₽/шт</div>
+            </div>
+            <p class="price-note" style="margin-top:10px;">Для форматов крупнее A2 цену нанесения следует уточнить и при необходимости изменить вручную.</p>
           </div>
-        </div>
+        </details>
       </section>
     </main>
   </div>
@@ -1546,13 +1615,26 @@
       return (els.cutEnabled.checked || els.contourEnabled.checked) ? CUT_ROLL_WIDTH_CM : FULL_ROLL_WIDTH_CM;
     }
 
-    function getApplyPriceByItems(itemsQty) {
+    function getRetailApplyPrice(print) {
+      const width = Math.max(0.1, num(print?.width, 0.1));
+      const height = Math.max(0.1, num(print?.height, 0.1));
+      const shortSide = Math.min(width, height);
+      const longSide = Math.max(width, height);
+
+      if (shortSide < 14.8 && longSide < 21) return 650;
+      if (shortSide <= 21 && longSide <= 29.7) return 750;
+      if (shortSide <= 29.7 && longSide <= 42) return 950;
+      return 1200;
+    }
+
+    function getApplyPriceByItems(itemsQty, totalPrints, primaryPrint) {
       if (itemsQty <= 0) return 0;
-      if (itemsQty < 4) return 750;
-      if (itemsQty < 10) return 200;
-      if (itemsQty < 20) return 100;
-      if (itemsQty < 100) return 75;
-      if (itemsQty < 200) return 50;
+      if (itemsQty < 3) return getRetailApplyPrice(primaryPrint);
+      if (totalPrints < 4) return 750;
+      if (totalPrints < 10) return 200;
+      if (totalPrints < 20) return 100;
+      if (totalPrints < 100) return 75;
+      if (totalPrints < 200) return 50;
       return 40;
     }
 
@@ -1737,7 +1819,7 @@
       const printCost = meters * meterPrice;
       const itemsQty = prints.length ? Math.max(1, Math.floor(num(prints[0]?.qty || 1, 1))) : 0;
       const totalPrints = totalPrintsQty();
-      const applyPriceAuto = getApplyPriceByItems(totalPrints);
+      const applyPriceAuto = getApplyPriceByItems(itemsQty, totalPrints, prints[0]);
 
       if (document.activeElement !== els.applyPrice) els.applyPrice.value = applyPriceAuto;
 

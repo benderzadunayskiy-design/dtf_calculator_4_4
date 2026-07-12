@@ -158,6 +158,38 @@
       box-shadow: 0 0 0 3px rgba(36, 84, 230, .12);
     }
 
+    .print-type-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .print-type-btn {
+      height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 0 10px;
+      background: #fff;
+      color: #344054;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .15s;
+      white-space: nowrap;
+    }
+
+    .print-type-btn:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .print-type-btn.active {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 0 0 3px rgba(36, 84, 230, .12);
+    }
+
     .hint {
       color: var(--muted);
       font-size: 13px;
@@ -613,7 +645,7 @@
         color: rgba(255,255,255,.92);
       }
 
-      .summary p:nth-of-type(7) {
+      .summary p:nth-of-type(8) {
         margin: 12px -2px 12px;
         padding: 14px;
         background: rgba(255,255,255,.14);
@@ -622,7 +654,7 @@
         color: #fff;
       }
 
-      .summary p:nth-of-type(7) span:first-child {
+      .summary p:nth-of-type(8) span:first-child {
         font-size: 26px;
       }
 
@@ -658,6 +690,12 @@
         height: 40px;
         font-size: 16px;
         border-radius: 12px;
+      }
+
+      .print-type-btn {
+        height: 40px;
+        border-radius: 12px;
+        font-size: 14px;
       }
 
       .services {
@@ -780,11 +818,12 @@
 
           <div class="params-grid">
             <div>
-              <label for="printType">Тип печати</label>
-              <select id="printType">
-                <option value="DTF">DTF</option>
-                <option value="UF_DTF">UF DTF</option>
-              </select>
+              <label>Тип печати</label>
+              <input type="hidden" id="printType" value="DTF">
+              <div class="print-type-buttons" role="group" aria-label="Тип печати">
+                <button type="button" class="print-type-btn active" data-print-type="DTF" aria-pressed="true">DTF</button>
+                <button type="button" class="print-type-btn" data-print-type="UF_DTF" aria-pressed="false">UF DTF</button>
+              </div>
             </div>
             <div>
               <label for="meterPrice">Цена за метр</label>
@@ -870,6 +909,7 @@
         <div id="summaryTab" class="tab-panel active">
         <div class="card summary">
           <h2>Итог</h2>
+          <p>Тип печати: <span id="summaryPrintTypeText">DTF</span></p>
           <p>Метраж: <span id="metersText">0 м</span> — <span id="printCostText">0 ₽</span><span class="calc-note" id="printCalcText"></span></p>
           <p>Заполнение рулона: <span id="fillPercentText">0%</span><span class="calc-note" id="fillPercentCalcText"></span></p>
           <p id="applyLine">Нанесение: <span id="applyCostText">0 ₽</span><span class="calc-note" id="applyCalcText"></span></p>
@@ -1018,6 +1058,7 @@
 
     const els = {
       printType: document.getElementById('printType'),
+      printTypeButtons: document.querySelectorAll('.print-type-btn'),
       meterPrice: document.getElementById('meterPrice'),
       gapX: document.getElementById('gapX'),
       gapY: document.getElementById('gapY'),
@@ -1038,6 +1079,7 @@
       contourCostText: document.getElementById('contourCostText'),
       itemPriceText: document.getElementById('itemPriceText'),
       totalText: document.getElementById('totalText'),
+      summaryPrintTypeText: document.getElementById('summaryPrintTypeText'),
       copyClientBtn: document.getElementById('copyClientBtn'),
       fillPercentText: document.getElementById('fillPercentText'),
       fillPercentCalcText: document.getElementById('fillPercentCalcText'),
@@ -1146,6 +1188,7 @@
 
     function applySettings(settings = {}) {
       if ('printType' in settings) els.printType.value = settings.printType;
+      syncPrintTypeButtons();
       if ('meterPrice' in settings) els.meterPrice.value = settings.meterPrice;
       if ('meterPriceManual' in settings) meterPriceManual = Boolean(settings.meterPriceManual);
       if ('gapX' in settings) els.gapX.value = settings.gapX;
@@ -1173,6 +1216,23 @@
       els.powderCost.value = profile.powderCost;
       els.packageCost.value = profile.packageCost;
       els.amortizationCost.value = profile.amortizationCost;
+    }
+
+    function syncPrintTypeButtons() {
+      els.printTypeButtons.forEach(btn => {
+        const isActive = btn.dataset.printType === els.printType.value;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
+      });
+    }
+
+    function selectPrintType(type) {
+      if (type !== 'DTF' && type !== 'UF_DTF') return;
+      els.printType.value = type;
+      syncPrintTypeButtons();
+      meterPriceManual = false;
+      applyCostProfile(type);
+      calculate();
     }
 
     function setActiveTab(tabId) {
@@ -1703,6 +1763,7 @@
 
       lastCalculation = { meters, total, itemPrice, orderCostPrice, profit, margin };
 
+      els.summaryPrintTypeText.textContent = type === 'UF_DTF' ? 'UF DTF' : 'DTF';
       els.metersText.textContent = meters.toFixed(2).replace('.', ',') + ' м';
       els.printCostText.textContent = money(printCost);
       els.applyCostText.textContent = money(applyCost);
@@ -1774,10 +1835,8 @@
       calculate();
     });
 
-    els.printType.addEventListener('change', () => {
-      meterPriceManual = false;
-      applyCostProfile(els.printType.value);
-      calculate();
+    els.printTypeButtons.forEach(btn => {
+      btn.addEventListener('click', () => selectPrintType(btn.dataset.printType));
     });
 
     els.applyPrice.addEventListener('input', calculate);

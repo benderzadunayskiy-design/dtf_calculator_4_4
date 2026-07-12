@@ -1219,14 +1219,13 @@
       if (!state) return false;
 
       isRestoring = true;
-      prints = Array.isArray(state.prints) ? state.prints : [];
-      applySettings(state.settings || {});
+      prints = [];
       applyCostSettings(state.costs || {});
       renderPrintRows();
       calculate();
-      setActiveTab(state.activeTab || 'summaryTab');
+      setActiveTab('summaryTab');
       isRestoring = false;
-      els.saveStatus.textContent = 'Данные восстановлены';
+      els.saveStatus.textContent = 'Новый расчет';
       return true;
     }
 
